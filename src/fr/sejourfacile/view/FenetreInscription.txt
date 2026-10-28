@@ -1,0 +1,155 @@
+package fr.sejourfacile.view;
+
+import com.formdev.flatlaf.FlatClientProperties;
+import fr.sejourfacile.dao.UtilisateurDAO;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+
+public class FenetreInscription extends JDialog {
+    private JTextField txtNom, txtPrenom, txtEmail;
+    private JPasswordField txtMdp;
+    private JComboBox<String> comboRole;
+
+    private JTextField txtNumEtranger, txtEtablissement, txtNiveau;
+    private JPanel panelChampsEtudiant;
+
+    private JTextField txtMatricule, txtService;
+    private JPanel panelChampsAgent;
+
+    private UtilisateurDAO utilisateurDAO;
+
+    public FenetreInscription(JFrame parent) {
+        super(parent, "Création de compte — SéjourFacile", true);
+        utilisateurDAO = new UtilisateurDAO();
+
+        setSize(500, 580);
+        setLocationRelativeTo(parent);
+        setResizable(false);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 15));
+        mainPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
+        mainPanel.setBackground(new Color(248, 250, 252));
+
+        JLabel lblTitre = new JLabel("Inscription Nouvel Utilisateur", SwingConstants.CENTER);
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitre.setForeground(new Color(30, 41, 59));
+        mainPanel.add(lblTitre, BorderLayout.NORTH);
+
+        JPanel formContainer = new JPanel();
+        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
+        formContainer.setOpaque(false);
+
+        formContainer.add(new JLabel("Type de profil :"));
+        comboRole = new JComboBox<>(new String[]{"Étudiant International", "Agent Administratif"});
+        comboRole.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+        comboRole.addActionListener(e -> basculerRole());
+        formContainer.add(comboRole);
+        formContainer.add(Box.createVerticalStrut(10));
+
+        formContainer.add(new JLabel("Prénom :"));
+        txtPrenom = new JTextField();
+        txtPrenom.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        formContainer.add(txtPrenom);
+        formContainer.add(Box.createVerticalStrut(8));
+
+        formContainer.add(new JLabel("Nom :"));
+        txtNom = new JTextField();
+        txtNom.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        formContainer.add(txtNom);
+        formContainer.add(Box.createVerticalStrut(8));
+
+        formContainer.add(new JLabel("Email universitaire / professionnel :"));
+        txtEmail = new JTextField();
+        txtEmail.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        formContainer.add(txtEmail);
+        formContainer.add(Box.createVerticalStrut(8));
+
+        formContainer.add(new JLabel("Mot de passe :"));
+        txtMdp = new JPasswordField();
+        txtMdp.putClientProperty(FlatClientProperties.STYLE, "arc: 10; showRevealButton: true");
+        formContainer.add(txtMdp);
+        formContainer.add(Box.createVerticalStrut(12));
+
+        panelChampsEtudiant = new JPanel(new GridLayout(3, 2, 5, 8));
+        panelChampsEtudiant.setOpaque(false);
+        panelChampsEtudiant.setBorder(BorderFactory.createTitledBorder("Renseignements de séjour"));
+        panelChampsEtudiant.add(new JLabel("N° Étranger (AGDREF) :"));
+        txtNumEtranger = new JTextField();
+        panelChampsEtudiant.add(txtNumEtranger);
+        panelChampsEtudiant.add(new JLabel("Établissement :"));
+        txtEtablissement = new JTextField();
+        panelChampsEtudiant.add(txtEtablissement);
+        panelChampsEtudiant.add(new JLabel("Niveau d'études :"));
+        txtNiveau = new JTextField();
+        panelChampsEtudiant.add(txtNiveau);
+        formContainer.add(panelChampsEtudiant);
+
+        panelChampsAgent = new JPanel(new GridLayout(2, 2, 5, 8));
+        panelChampsAgent.setOpaque(false);
+        panelChampsAgent.setBorder(BorderFactory.createTitledBorder("Renseignements administratifs"));
+        panelChampsAgent.add(new JLabel("Matricule agent :"));
+        txtMatricule = new JTextField();
+        panelChampsAgent.add(txtMatricule);
+        panelChampsAgent.add(new JLabel("Service :"));
+        txtService = new JTextField();
+        panelChampsAgent.add(txtService);
+        panelChampsAgent.setVisible(false);
+        formContainer.add(panelChampsAgent);
+
+        mainPanel.add(new JScrollPane(formContainer), BorderLayout.CENTER);
+
+        JButton btnInscrire = new JButton("Créer mon compte");
+        btnInscrire.setBackground(new Color(37, 99, 235));
+        btnInscrire.setForeground(Color.WHITE);
+        btnInscrire.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnInscrire.setPreferredSize(new Dimension(0, 42));
+        btnInscrire.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+        btnInscrire.addActionListener(e -> validerInscription());
+        mainPanel.add(btnInscrire, BorderLayout.SOUTH);
+
+        add(mainPanel);
+    }
+
+    private void basculerRole() {
+        boolean estEtudiant = comboRole.getSelectedIndex() == 0;
+        panelChampsEtudiant.setVisible(estEtudiant);
+        panelChampsAgent.setVisible(!estEtudiant);
+        revalidate();
+        repaint();
+    }
+
+    private void validerInscription() {
+        String nom = txtNom.getText().trim();
+        String prenom = txtPrenom.getText().trim();
+        String email = txtEmail.getText().trim();
+        String mdp = new String(txtMdp.getPassword());
+
+        if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || mdp.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs obligatoires.", "Attention", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (utilisateurDAO.emailExiste(email)) {
+            JOptionPane.showMessageDialog(this, "Cette adresse email est déjà enregistrée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean succes;
+        if (comboRole.getSelectedIndex() == 0) {
+            succes = utilisateurDAO.inscrireEtudiant(nom, prenom, email, mdp,
+                    txtNumEtranger.getText().trim(), txtEtablissement.getText().trim(), txtNiveau.getText().trim());
+        } else {
+            succes = utilisateurDAO.inscrireAgent(nom, prenom, email, mdp,
+                    txtMatricule.getText().trim(), txtService.getText().trim());
+        }
+
+        if (succes) {
+            JOptionPane.showMessageDialog(this, "Compte créé avec succès ! Vous pouvez maintenant vous connecter.", "Félicitations", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Une erreur est survenue lors de l'enregistrement.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
