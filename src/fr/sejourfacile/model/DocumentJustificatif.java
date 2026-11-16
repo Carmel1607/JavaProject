@@ -6,6 +6,9 @@ public class DocumentJustificatif {
     private String cheminFichier;
     private boolean estValide;
 
+
+    
+
     public DocumentJustificatif(int idDoc, String intitule, String cheminFichier) {
         this.idDoc = idDoc;
         this.intitule = intitule;
